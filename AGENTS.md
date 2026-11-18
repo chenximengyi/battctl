@@ -86,7 +86,8 @@
 - v0.2.3 用 `policy_registered` 表示登记一致，用 `runtime_status` 表示当次行为。
 - `verification_passed` 和兼容字段 `policy_active` 仅在登记一致、接电且当次电池
   行为符合目标时为true。高于目标仍充电或静止、遥测未知、未接电时不能报告成功。
-- `system_override=unknown`：尚无可靠实时校准检测，不从电流推断确定原因。
+- `system_override=unknown`：CLI 仍无可靠的实时覆盖检测，不从电流推断确定原因；
+  校准类覆盖可用系统日志确认，但不能据此让 JSON 断言原因。
 - `hold` 必须读取真实遥测；登记匹配时不重复写入，但运行状态未验证返回1并给出
   指引，不能再一律说无需重启。新目标保存等待重启仍返回0，含义只是保存成功。
 - 恢复及兼容性检查使用登记一致性，不依赖当次电流。
@@ -116,6 +117,13 @@
   重复50%/0mA读数；已公开预发布。新构建号完整睡眠验收仍未完成。
 - 此后系统电量估算校准临时覆盖50%，充满后仍停在100%/0mA，登记未变；
   用户正常重启后充满请求变为0，恢复接电放电。不能保证每次重启都能恢复。
+- `26B131` / macOS 27.2.1：距上次满充约21天后系统再次自行发起充满校准，
+  日志明确 `Charge To Full System Level Request:1` 与
+  `SOC limit policy suspend due to mitigation active:1`；PowerUI 报
+  `ChargingUpForGauging`、MCL target 50%、`chargingOverrideAllowed: 0`。
+  注册值、两个 manual-limit 条目与目标文件全程仍为50%。本次在充到61%时正常
+  重启，请求未被清除并在开机后重新发起；26A434 则是充满后才重启才恢复。
+  属预期维护行为，不是策略丢失，重复 `hold` 无效。详见 `docs/validation.md`。
 - v0.2.3修正状态判定及提示；历史异常用脱敏回归测试复现。尚未在新版下经历
   新一轮真实校准，不能把回归测试写成新一轮硬件验收。详见 `docs/validation.md`。
 - v0.2.3本机安装后，verify正确识别接电放电，hold 50读取真实遥测并报告无须

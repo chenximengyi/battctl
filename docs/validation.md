@@ -36,7 +36,8 @@ protected-service restarts or sleep-setting changes were needed.
 - Other models, chips, OS builds or firmware, or every configurable target.
 - Exact lower replenishment thresholds, lifetime effects or indefinite exact percentage.
 - A reliable automatic recovery from every calibration override; calibration
-  overriding the custom 50% target has now been observed on 26A434.
+  overriding the custom 50% target has been observed on 26A434 and again on
+  26B131, where restarting before the full charge completed did not clear it.
 - Continuous current during deep sleep or recovery from every power-loss/update case.
 
 ## macOS 27.0.1 / 26A434
@@ -67,3 +68,29 @@ original-backup file hashes were identical before and after installation/hold.
 Tests cover configuration parsing, saved intent, replacement of pending targets,
 partial writes and rollback, native API failures, policy verification and CLI argument
 rejection. They use fake clients for writes and do not alter charging settings.
+
+## macOS 27.2.1 / 26B131
+
+The second recorded charge-to-full override happened on this build with the
+installed v0.1.0 binary. While the battery charged past the saved target with the
+lid closed, registration stayed intact: PowerUI reported the manual selection at
+50, both active manual-limit entries read 50, and the saved target file still read
+50. The charging was the system's own maintenance path, not a lost policy.
+
+powerd's battery-gauging timer reported that the last full charge was about 21
+days earlier and requested a charge to full. PowerUI then reported
+`ChargingUpForGauging` with an optimized limit of 100, an MCL target of 50 and
+`chargingOverrideAllowed: 0`, and the same log sequence marked the SOC-limit
+policy suspended while the mitigation was active.
+
+A normal restart during that charge did not clear the request. After boot the
+full-charge request was issued again because the attempt had not completed. The
+earlier 26A434 event was cleared by a restart only after the battery had already
+reached 100%, so restart timing, not the restart itself, appears to decide the
+outcome; this is an inference from two observations and not a recovery procedure.
+
+Apple documents occasional charging to 100% with Charge Limit enabled as expected
+behavior for accurate state-of-charge estimates. A charge above target with
+registration intact is therefore not evidence that a saved target was lost, and
+repeating `hold` does not end it. How long this build holds at 100% before the
+limit resumes is not established.
