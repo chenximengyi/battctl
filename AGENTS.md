@@ -88,6 +88,8 @@
   行为符合目标时为true。高于目标仍充电或静止、遥测未知、未接电时不能报告成功。
 - `system_override=unknown`：CLI 仍无可靠的实时覆盖检测，不从电流推断确定原因；
   校准类覆盖可用系统日志确认，但不能据此让 JSON 断言原因。
+- 校准请求不会因充电中途重启而清除；只有满充被电量计记账后才可能解除，
+  重启本身不是恢复手段。
 - `hold` 必须读取真实遥测；登记匹配时不重复写入，但运行状态未验证返回1并给出
   指引，不能再一律说无需重启。新目标保存等待重启仍返回0，含义只是保存成功。
 - 恢复及兼容性检查使用登记一致性，不依赖当次电流。
@@ -121,9 +123,14 @@
   日志明确 `Charge To Full System Level Request:1` 与
   `SOC limit policy suspend due to mitigation active:1`；PowerUI 报
   `ChargingUpForGauging`、MCL target 50%、`chargingOverrideAllowed: 0`。
-  注册值、两个 manual-limit 条目与目标文件全程仍为50%。本次在充到61%时正常
-  重启，请求未被清除并在开机后重新发起；26A434 则是充满后才重启才恢复。
-  属预期维护行为，不是策略丢失，重复 `hold` 无效。详见 `docs/validation.md`。
+  注册值、两个 manual-limit 条目与目标文件全程仍为50%。在61%与99%两次正常
+  重启均未清除，开机后重新发起；充到100%后再重启，日志转为
+  `Last full charge date was 0.0 days ago too recent` 与
+  `charge to full requested:0`，恢复接电放电且 verify 通过。属预期维护行为，
+  不是策略丢失，重复 `hold` 无效。详见 `docs/validation.md`。
+- 覆盖检测调研：`smartChargingUIState:chargeLimit:chargingOverrideAllowed:withError:`
+  在26B131上校准中返回18、正常放电返回16；两次返回的 chargeLimit 都是100，
+  语义未验证且样本不足，暂不写入 JSON，继续保留 `system_override=unknown`。
 - v0.2.3修正状态判定及提示；历史异常用脱敏回归测试复现。尚未在新版下经历
   新一轮真实校准，不能把回归测试写成新一轮硬件验收。详见 `docs/validation.md`。
 - v0.2.3本机安装后，verify正确识别接电放电，hold 50读取真实遥测并报告无须

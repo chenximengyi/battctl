@@ -83,14 +83,21 @@ days earlier and requested a charge to full. PowerUI then reported
 `chargingOverrideAllowed: 0`, and the same log sequence marked the SOC-limit
 policy suspended while the mitigation was active.
 
-A normal restart during that charge did not clear the request. After boot the
-full-charge request was issued again because the attempt had not completed. The
-earlier 26A434 event was cleared by a restart only after the battery had already
-reached 100%, so restart timing, not the restart itself, appears to decide the
-outcome; this is an inference from two observations and not a recovery procedure.
+A normal restart during that charge did not clear the request. Two restarts, taken
+at 61% and at 99% while charging, were each followed by the request being issued
+again because the attempt had not completed.
+
+After the battery reached 100%, another normal restart cleared it: powerd reported
+`Last full charge date was 0.0 days ago too recent` and
+`chargeControl charge to full requested:0`, the SOC-limit policy resumed, and
+`verify` reported `discharging_to_target` with AC connected at 100%. Both this
+event and the earlier 26A434 event cleared only after the battery had reached
+100%, so the recorded full charge, not the restart by itself, appears to end the
+request. That remains an inference from two events, not a guaranteed recovery
+procedure.
 
 Apple documents occasional charging to 100% with Charge Limit enabled as expected
 behavior for accurate state-of-charge estimates. A charge above target with
 registration intact is therefore not evidence that a saved target was lost, and
-repeating `hold` does not end it. How long this build holds at 100% before the
-limit resumes is not established.
+repeating `hold` does not end it. Whether the limit resumes without a restart after
+the gauge records the full charge is not established.

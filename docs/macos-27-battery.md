@@ -51,6 +51,43 @@ be replaced before restart, including cancellation back to the active target.
 actual policy readback before clearing requested-target metadata. The original
 backup is retained for retries. Failed restoration leaves recovery information intact.
 
+## Charge-to-full calibration
+
+A registered manual limit does not stop macOS from occasionally charging to full.
+The decision belongs to powerd's battery-gauging path, not to the CLI and not to the
+Charge Limit switch in Battery settings. A periodic timer compares the last
+full-charge date with a hard-coded 1,814,400-second (21-day) threshold in the
+current build's powerd. When that threshold is exceeded, or when the gauge needs an
+OCV or QMax update, powerd raises a system-level charge-to-full request,
+PowerUIAgent reports `ChargingUpForGauging`, and the charging layer suspends the
+SOC-limit policy. The manual-limit preference, its entries and the saved target keep
+reading the requested value throughout.
+
+Observed sequence on 26B131:
+
+- The battery charged above the 50% target with the lid closed while registration
+  still read 50.
+- powerd logged `Last full charge date was 21.4 days ago, try and charge to full`,
+  `Charge To Full System Level Request:1` and
+  `SOC limit policy suspend due to mitigation active:1`.
+- PowerUI logged `ChargingUpForGauging`, optimized limit 100, MCL target 50 and
+  `chargingOverrideAllowed: 0`.
+- Restarts taken at 61% and at 99% during that charge did not clear the request; it
+  was issued again after each boot.
+- After the battery reached 100%, a further restart was followed by
+  `Last full charge date was 0.0 days ago too recent` and
+  `chargeControl charge to full requested:0`. The SOC-limit policy resumed and the
+  battery discharged toward 50% with AC connected.
+
+Apple documents occasional charging to 100% with Charge Limit enabled as expected
+behavior for accurate state-of-charge estimates. Consequences for the CLI: `hold`
+cannot cancel the request, a matching target writes nothing, and a restart only
+helps after the gauge has recorded the full charge. The CLI still reports
+`system_override=unknown`; an opaque PowerUI state value observed during this event
+(18, versus 16 while discharging at the target) is not a validated detector. A
+single battery sample cannot distinguish calibration from a user-set limit or
+another override, and no recovery is guaranteed.
+
 ## Verification
 
 Registration and runtime observations are separate in v0.2.3:

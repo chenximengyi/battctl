@@ -52,11 +52,13 @@ A 100% idle battery with a registered 50% target is not successful verification.
 `hold` reads telemetry too and will not claim that a matching target needs no reboot.
 A new target saved for reboot still reports staging success separately.
 
-macOS can temporarily override limits to charge fully for battery gauging.
-The CLI cannot identify that cause directly (`system_override=unknown`); it reports
-observed inconsistencies and suggests checking system charging state. It does not
-cancel calibration. In one observed case a normal reboot after full charging restored
-discharge, but this is not a guaranteed recovery method. Check again after recovery.
+macOS can temporarily override limits to charge fully for battery gauging, roughly
+every three weeks when a charge limit keeps the battery away from full. The CLI
+cannot identify that cause directly (`system_override=unknown`) and does not cancel
+calibration. Let the battery reach 100% and stay connected while the gauge records
+the full charge; restarting before that point re-issues the request after boot. In
+observed cases a restart taken after the battery had reached 100% restored discharge
+to the target, but this is not a guaranteed recovery method. Check again afterwards.
 
 Use macOS Battery settings for temporary full charging. `near_target` describes
 one sample, not proof of continuous holding. Unplugging allows normal battery use.
