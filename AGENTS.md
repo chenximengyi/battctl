@@ -140,6 +140,12 @@
 ## 构建、安装与本机记录器
 
 `make test` 构建并运行全部测试及 shell 语法检查。
+
+`.github/workflows/ci.yml` 只做同一件事：确认干净的提交树能编译并通过假客户端测试，
+不验证任何真实限充行为，绿色勾不能当作硬件兼容性证据。它固定在 `macos-15-intel`：
+arm64 池曾两次在 15 分钟内分配不到机器而直接判失败（非代码问题）；纯 `**.md`
+改动不触发，arm64 构建由目标机的本地 `make test` 覆盖。
+
 `sudo ./scripts/install.sh` 安装至 `/Library/Application Support/battctl/battctl`，
 入口为 `/usr/local/bin/battctl`；安装本身不改变目标，不创建充电控制守护进程。
 卸载脚本先恢复原上限，恢复失败时保留程序与备份。

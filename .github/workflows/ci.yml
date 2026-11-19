@@ -2,16 +2,31 @@ name: Build and test
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
-    runs-on: macos-15
+    # The arm64 macOS pool is frequently congested and jobs expire before a
+    # runner is assigned. This job only proves the committed tree compiles and
+    # passes the fake-client tests, so an Intel image is sufficient; arm64
+    # builds are covered by local runs on the target machine.
+    runs-on: macos-15-intel
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Report environment
+        run: |
+          sw_vers
+          uname -m
+          clang --version | head -1
       - name: Compile and run tests (no battery writes)
         run: make test
