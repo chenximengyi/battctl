@@ -141,10 +141,10 @@
 
 `make test` 构建并运行全部测试及 shell 语法检查。
 
-`.github/workflows/ci.yml` 只做同一件事：确认干净的提交树能编译并通过假客户端测试，
-不验证任何真实限充行为，绿色勾不能当作硬件兼容性证据。它固定在 `macos-15-intel`：
-arm64 池曾两次在 15 分钟内分配不到机器而直接判失败（非代码问题）；纯 `**.md`
-改动不触发，arm64 构建由目标机的本地 `make test` 覆盖。
+本仓库不设 CI（`.github/workflows/` 已于 2026-11-19 删除），不要重新添加。
+有效验证只能在 `MacBookPro18,1` 与当前测试构建号上完成，托管 runner 无法验证
+任何限充行为；此前的 macOS 工作流只重复本地 `make test`，还因 arm64 池排队
+15 分钟分配不到机器而两次误判失败。要证明编译通过，用干净检出跑 `make test`。
 
 `sudo ./scripts/install.sh` 安装至 `/Library/Application Support/battctl/battctl`，
 入口为 `/usr/local/bin/battctl`；安装本身不改变目标，不创建充电控制守护进程。

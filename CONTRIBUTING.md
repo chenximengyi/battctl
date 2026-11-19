@@ -6,8 +6,10 @@ Build with Apple's Command Line Tools on macOS:
 make test
 ```
 
-Tests must not write battery settings or require root. A CI pass confirms compilation
-and software checks; it does not validate a new hardware/OS combination.
+Tests must not write battery settings or require root. A passing `make test` confirms
+compilation and software checks; it does not validate a new hardware/OS combination.
+There is no hosted CI: charging behavior can only be validated on the supported
+model and macOS build itself.
 
 For changes to charging behavior, explain the trigger, before/after behavior,
 readback checks and recovery path. Preserve the original backup. Keep preference
